@@ -1,0 +1,10 @@
+# ignore below files.
+my.ip
+env.base
+env.ip
+env.pass
+env.token
+ceph-openstack/
+erlang.cookie
+mongodb-keyfile
+nova-ssh/

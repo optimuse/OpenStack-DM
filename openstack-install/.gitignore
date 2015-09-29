@@ -1,0 +1,5 @@
+# ignore below files.
+openstack-install.ip
+openstack-install.pass
+openstack-install.token
+*.tar.gz

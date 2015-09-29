@@ -1,0 +1,10 @@
+[Unit]
+Description=telegraf
+
+[Service]
+ExecStart=/usr/local/bin/telegraf -config /etc/telegraf.conf
+Restart=always
+RestartSec=0
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,34 @@
+## CentOS root resize.
+
+## !!! better to complete this step manually.
+## !!!
+
+yum install -y git parted cloud-utils
+git clone https://github.com/flegmatik/linux-rootfs-resize.git
+cd linux-rootfs-resize
+chmod +x install
+./install
+
+
+## Manual operation.
+## 
+## linux-rootfs-resize will generate new modified vmlinuz and initramfs
+## and add new boot load entry into grub config.
+## For clean, you should remove obsolete boot load entry out from grub.cfg 
+## and delete obsolete vmlinuz/initramfs files in /boot directory.
+
+
+## Modify grub 
+# about linux console display resolution, see:
+# http://www.gregfolkert.net/info/vesa-display-codes.html
+
+sed -i 's/ rhgb//g' /boot/grub/grub.conf
+sed -i 's/ quiet//g' /boot/grub/grub.conf
+sed -i 's/ console=tty0 //g' /boot/grub/grub.conf
+
+# add extra options on end of 'kernel' line.
+grep '^[[:space:]]*kernel' /boot/grub/grub.conf  | grep vga=788
+if [[ $? -ne 0 ]]; then
+sed -i 's/^[[:space:]]*kernel.*$/& serial=tty0 console=ttyS0,115200n8 console=tty1 vga=788/g' /boot/grub/grub.conf
+fi
+

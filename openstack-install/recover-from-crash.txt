@@ -1,0 +1,9 @@
+1. systemctl start mysql@bootstrap
+systemctl start mysql
+
+2. sh tools/init-rabbit.sh
+   sh tools/add-rabbit.sh
+
+3. change-mongo-to-primary 127.0.0.1
+
+4. redis

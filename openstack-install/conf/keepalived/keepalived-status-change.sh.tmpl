@@ -1,0 +1,42 @@
+#!/usr/bin/bash
+
+## keepalived use this script 
+## 1. to start/stop haproxy.
+## 2. to promote mongo on this node a primary
+## 3. to make redis on this node a master (slaveof no one)
+## 4. to restart ceilomter (ceilomter-api can't reautoconnect mongodb).
+## 5. to restart rabbitmq
+## 5. to restart all openstack-related services.(reconnect rabbitmq)
+
+## see: https://bugzilla.redhat.com/show_bug.cgi?id=1158115
+## This script should be put in /usr/libexec/keepalived/
+## make sure selinux context is correct.
+## restorecon -R /usr/libexec/keepalived/
+
+## $1 = A string indicating whether it's a "GROUP" or an "INSTANCE"
+## $2 = The name of said group or instance
+## $3 = The state it's transitioning to ("MASTER", "BACKUP" or "FAULT")
+## $4 = The priority value
+
+TYPE=$1
+NAME=$2
+STATE=$3
+
+case $STATE in
+  "MASTER")
+    sh -x <OPENSTACK_INSTALL_DIR>/keepalived-status-master.sh
+    exit 0
+    ;;
+  "BACKUP")
+    # systemctl stop haproxy
+    exit 0
+    ;;
+  "FAULT")
+    # systemctl stop haproxy
+    exit 0
+    ;;
+  *)
+    echo "unknown state"
+    exit 1
+    ;;
+esac

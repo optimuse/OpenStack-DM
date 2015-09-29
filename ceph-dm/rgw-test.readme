@@ -1,0 +1,72 @@
+#!/bin/bash
+
+radosgw-admin user create --uid="testuser" --display-name="First User"
+radosgw-admin subuser create --uid="testuser" --subuser="testuser:swift" --access=readwrite
+# radosgw-admin subuser create --uid="testuser" --subuser="testuser:swift" --access=full
+# full is not readwrite, as it also includes the access control policy.
+
+# Show user info.
+radosgw-admin user info --uid=testuser
+
+
+# Modify user info. [uid] can not be modified.
+radosgw-admin user modify --uid=testuser --display-name="Test User"
+radosgw-admin subuser modify --uid=testuser --subuser=testuser:swift --access=readwrite
+
+## Enable or suspend user.
+
+# Disable the user also disables the subuser.
+radosgw-admin user suspend --uid=testuser
+radosgw-admin user enable --uid=testuser
+
+## Remove user.
+
+# Removes the user also removes the subuser.
+radosgw-admin user rm --uid=testuser
+# Just Remove the subuser.
+radosgw-admin subuser rm --subuser=testuser:swift --purge-keys
+
+
+## Generate keys for user.
+radosgw-admin key create --uid=testuser --key-type=s3 --gen-access-key --gen-secret
+
+## Generate keys for subuser.
+radosgw-admin key create --subuser=testuser:swift --key-type=swift --gen-secret
+
+
+radosgw-admin key rm --uid=testuser --subuser=testuser:swift --key-type=swift
+
+
+## Add or Remove caps.
+
+# --caps="[users|buckets|metadata|usage|zone]=[*|read|write|read, write]"
+radosgw-admin caps add --uid=testuser --caps="users=*"
+radosgw-admin caps remove --uid=testuser --caps="users=*"
+
+
+## Quota
+
+# User Quota
+radosgw-admin quota set --quota-scope=user --uid=testuser --max-objects=1024 --max-size=1024
+radosgw-admin quota set --quota-scope=bucket --uid=testuser --max-objects=1024 --max-size=1024
+
+
+radosgw-admin quota enable --quota-scope=user --uid=testuser
+radosgw-admin quota disable --quota-scope=user --uid=testuser
+
+radosgw-admin quota enable --quota-scope=bucket --uid=testuser
+radosgw-admin quota disable --quota-scope=bucket --uid=testuser
+
+radosgw-admin user stats --uid=testuser --sync-stats
+
+# Get user stats.
+radosgw-admin user stats --uid=testuser
+
+
+
+
+
+
+
+
+

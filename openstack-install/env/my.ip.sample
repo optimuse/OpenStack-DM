@@ -1,0 +1,5 @@
+# Different for each host.
+export MGMT_IP=172.30.0.50
+export EXT_IP=192.168.44.50
+export NODE_HOSTNAME=j-cont
+

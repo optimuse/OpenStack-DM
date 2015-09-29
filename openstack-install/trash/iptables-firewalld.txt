@@ -1,0 +1,36 @@
+## database
+firewall-cmd --zone=public --add-port=3306/tcp --permanent
+firewall-cmd --zone=public --add-port=3306/tcp
+
+## httpd
+firewall-cmd --zone=public --add-port=80/tcp --permanent
+firewall-cmd --zone=public --add-port=80/tcp
+
+## keystone
+firewall-cmd --zone=public --add-port=35357/tcp --permanent
+firewall-cmd --zone=public --add-port=35357/tcp
+firewall-cmd --zone=public --add-port=5000/tcp --permanent
+firewall-cmd --zone=public --add-port=5000/tcp
+
+## glance
+firewall-cmd --zone=public --add-port=9292/tcp --permanent
+firewall-cmd --zone=public --add-port=9292/tcp
+
+## cinder
+firewall-cmd --zone=public --add-port=3260/tcp --permanent
+firewall-cmd --zone=public --add-port=3260/tcp
+
+firewall-cmd --zone=public --add-port=8776/tcp --permanent
+firewall-cmd --zone=public --add-port=8776/tcp
+
+## nova
+firewall-cmd --zone=public --add-port=8773-8775/tcp --permanent
+firewall-cmd --zone=public --add-port=8773-8775/tcp
+
+## novnc
+firewall-cmd --zone=public --add-port=6080-6081/tcp --permanent
+firewall-cmd --zone=public --add-port=6080-6081/tcp
+
+## qemu-kvm
+firewall-cmd --zone=public --add-port=5900-5999/tcp --permanent
+firewall-cmd --zone=public --add-port=5900-5999/tcp 
