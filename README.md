@@ -1,2 +1,2 @@
-# OpenStack-DM
-Deploy and Manage an OpenStack Cloud. 
+# openstack-dm
+Deploy and manage an OpenStack Cloud.
