@@ -58,7 +58,7 @@ eval $(ssh-agent)
 ssh-add ~/.ssh/id_rsa
 ssh -A $node_ip "
 [[ ! -f ~/.ssh/id_rsa ]] && ssh-keygen -q -t rsa -f ~/.ssh/id_rsa -N ''
-source $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/load-environment.sh
+source $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/load-environment.sh
 while read n_ip n_hostname; do
   ssh -o StrictHostKeyChecking=no \$n_ip "hostname" </dev/null
   ssh-copy-id -i ~/.ssh/id_rsa.pub \$n_ip < /dev/null
@@ -69,27 +69,27 @@ done < \$MAP_BASE/all-node.list
 # Install
 ssh $node_ip "
 
-cat <<EOF > $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/env/my.ip
+cat <<EOF > $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/env/my.ip
 export MGMT_IP=$node_ip
 export EXT_IP=$node_ext_ip
 export NODE_HOSTNAME=$node_hostname
 EOF
 
 ## 1. Prepare Host(update).
-bash $DEPLOY_TEMP_DIR/openstack-dm/common/prepare-host-centos7.sh
+bash $DEPLOY_TEMP_DIR/OpenStack-DM/common/prepare-host-centos7.sh
 
 ## 2. Setup iptables on node.
-bash $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/helper/setup-iptables-on-node.sh
+bash $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/helper/setup-iptables-on-node.sh
 
 ## 3. Install controller node.
-bash $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/inst/install-juno.controller.sh $FLAG
+bash $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/inst/install-juno.controller.sh $FLAG
 
 ## 4. Install ceph client.
-bash $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/inst/install-ceph-client.sh
+bash $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/inst/install-ceph-client.sh
 
 ## 5. Configure ceph for glance/cinder.
-bash $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/helper/setup-ceph-on-glance.sh 
-bash $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/helper/setup-ceph-on-cinder.sh
+bash $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/helper/setup-ceph-on-glance.sh 
+bash $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/helper/setup-ceph-on-cinder.sh
 "
 
 

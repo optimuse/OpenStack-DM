@@ -45,6 +45,6 @@ while read n_ip n_name; do
   echo $n_name
   rsync -az /etc/hosts $n_ip:/etc/hosts
   rsync --exclude my.ip --exclude .git --exclude .gitignore \
-        -az $BASE_DIR/../  $n_ip:$DEPLOY_TEMP_DIR/openstack-dm/
+        -az $BASE_DIR/../  $n_ip:$DEPLOY_TEMP_DIR/OpenStack-DM/
 done < $MAP_BASE/all-node.list
 

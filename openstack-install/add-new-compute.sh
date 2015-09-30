@@ -51,26 +51,26 @@ done < $MAP_BASE/controller-node.list
 
 ssh $node_ip "
 
-cat <<EOF > $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/env/my.ip
+cat <<EOF > $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/env/my.ip
 export MGMT_IP=$node_ip
 export EXT_IP=$node_ext_ip
 export NODE_HOSTNAME=$node_hostname
 EOF
 
 ## 1. Prepare Host(update).
-bash -x $DEPLOY_TEMP_DIR/openstack-dm/common/prepare-host-centos7.sh
+bash -x $DEPLOY_TEMP_DIR/OpenStack-DM/common/prepare-host-centos7.sh
 
 ## 2. Setup iptables on node.
-bash -x $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/helper/setup-iptables-on-node.sh
+bash -x $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/helper/setup-iptables-on-node.sh
 
 ## 3. Install compute node.
-bash -x $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/inst/install-juno.compute.sh $FLAG
+bash -x $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/inst/install-juno.compute.sh $FLAG
 
 ## 4. Install ceph client.
-bash -x $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/inst/install-ceph-client.sh
+bash -x $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/inst/install-ceph-client.sh
 
 ## 5. Configure ceph for nova.
-bash -x $DEPLOY_TEMP_DIR/openstack-dm/openstack-install/helper/setup-ceph-on-nova.sh
+bash -x $DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/helper/setup-ceph-on-nova.sh
 
 "
 

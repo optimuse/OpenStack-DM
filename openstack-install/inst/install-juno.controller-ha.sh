@@ -114,7 +114,7 @@ fi
 rsync -az $CONF_BASE/keepalived/keepalived-status-change.sh.tmpl /usr/libexec/keepalived/keepalived-status-change.sh
 
 sed -i "
-s%<OPENSTACK_INSTALL_DIR>%$DEPLOY_TEMP_DIR/openstack-dm/openstack-install/%g;
+s%<OPENSTACK_INSTALL_DIR>%$DEPLOY_TEMP_DIR/OpenStack-DM/openstack-install/%g;
 " /usr/libexec/keepalived/keepalived-status-change.sh
 chmod +x /usr/libexec/keepalived/keepalived-status-change.sh
 restorecon -R /usr/libexec/keepalived/
