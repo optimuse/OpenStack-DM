@@ -34,7 +34,10 @@ systemctl enable iptables
 systemctl start iptables
 # systemctl start ip6tables
 
+## 
+yum install -y tcpdump net-tools lsof vim wget
 
 ## Update os and reboot.
 yum update -y
+
 
