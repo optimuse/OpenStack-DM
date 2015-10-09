@@ -54,7 +54,6 @@ def time_lstr_to_ustr(lstr, in_format, out_format=None):
 ## so we should use utc format.
 
 ## DAY start time and end time determined by any one day.
-# def day_to_utc_time(t_str, t_format):
 def day_to_utc_time(day_dt):
     day = day_dt.strftime(T_DAY_FORMAT)
     day_local_time_start = day + " 00:00:00"
@@ -90,120 +89,171 @@ def week_to_utc_time(day_dt):
     return (week_utc_time_start, week_utc_time_end)
     
 
-    
-def get_sql_value(db, sql_statement):
+SQL_TYPE_DICT = { 
+                 "instance": "count(*)",
+                 "vcpus": "COALESCE(sum(vcpus), 0)",
+                 "memory": "COALESCE(sum(memory_mb), 0)",
+                 "root": "COALESCE(sum(root_gb), 0)",
+                 "volume": "count(*)",
+                 "vol_size": " COALESCE(sum(size), 0)"
+                }
+
+def SQL_TIME_DICT_HELPER(time_start, time_end):
+    sql_time_between = "BETWEEN '" + time_start + "' AND '" + time_end + "'"
+    sql_time_created = "created_at BETWEEN '" + time_start + "' AND '" + time_end + "'"
+    sql_time_deleted = "deleted_at BETWEEN '" + time_start + "' AND '" + time_end + "'"
+    sql_time_exist = "created_at < '" + time_end + "' and ( deleted_at is NULL or deleted_at > '" + time_end + "' )"
+   
+    return {
+            "created": sql_time_created,
+            "deleted": sql_time_deleted,
+            "exist": sql_time_exist
+           }
+
+                    
+def build_sql_platform_usage_trend(res_type, res_action, res_table, time_start, time_end):
+    SQL_TIME_DICT = SQL_TIME_DICT_HELPER(time_start, time_end)
+    sql_temp = "select " + SQL_TYPE_DICT[res_type] + " from " + res_table + " where " + SQL_TIME_DICT[res_action]
+    return sql_temp
+
+def build_sql_tenant_usage_trend(res_type, res_action, res_table, time_start, time_end):
+    SQL_TIME_DICT = SQL_TIME_DICT_HELPER(time_start, time_end)
+    sql_temp = "select P.name, T.project_id, " + SQL_TYPE_DICT[res_type] + " \
+                from " + res_table + " as T \
+                inner join keystone.project as P \
+                on T.project_id = P.id \
+                where " + SQL_TIME_DICT[res_action] + " \
+                group by T.project_id \
+                order by name"
+    return sql_temp
+
+## !! Deprecated.
+def build_sql_tenant_usage(res_table):
+    # Tenant Usage
+    sql_temp = "select P.name, Q.project_id, Q.resource, COALESCE(sum(Q.in_use), 0) as res_sum " + "\
+                from " + res_table + " as Q \
+                inner join keystone.project as P \
+                on Q.project_id = P.id \
+                group by Q.project_id, Q.resource"
+    return sql_temp
+
+
+def influx_point(measurement, tags, time, value):
+    point = {
+               "measurement": measurement,
+               "tags": tags,
+               "time": time,
+               "fields": { "value": value }
+            }
+    return point
+
+
+def os_platform_usage_trend(db, influx, report_type, res_type, res_action, res_table, time_start, time_end):
+    measurement = "os_platform_usage_trend"
+    sql_statement = build_sql_platform_usage_trend(res_type, res_action, res_table, time_start, time_end)
     cursor = db.cursor()
     cursor.execute(sql_statement);
-    res = float(cursor.fetchone()[0])
-    return res
+    # single row result.
+    value = float(cursor.fetchone()[0])
+    
+    tags = {
+             "type": res_type,
+             "action": res_action,
+             "report_type": report_type
+           }
+    points = [influx_point(measurement, tags, time_end, value)]
+    return points
 
 
-## Write os_resource_usage measurement to Influxdb.
-def os_resource_usage(influx, tag_type, tag_action, tag_report_type, time, value):
-    json_body = [
-        {
-            "measurement": "os_resource_usage",
-            "tags": {
-                "type": tag_type, "action": tag_action, "report_type": tag_report_type
-            },
-            "time": time,
-            "fields": {
-                "value": value
-            }
-        }
-    ]
-    influx.write_points(json_body)
+def os_tenant_usage_trend(db, influx, report_type, res_type, res_action, res_table, time_start, time_end):
+    measurement = "os_tenant_usage_trend"
+    sql_statement = build_sql_tenant_usage_trend(res_type, res_action, res_table, time_start, time_end)
+    cursor = db.cursor()
+    cursor.execute(sql_statement)
+
+    # multiple row result.
+    points = []
+    for row in cursor:
+        tags = {
+                  "tenantname": row[0],
+                  "tenantid": row[1],
+                  "type": res_type,
+                  "action": res_action,
+                  "report_type": report_type
+               }
+        value = float(row[2])
+        points.append(influx_point(measurement, tags, time_end, value))
+    return points
 
 
-def os_tenant_usage(influx, tag_tenantname, tag_tenantid, tag_restype, time, value):
-    json_body = [
-        {
-            "measurement": "os_tenant_usage",
-            "tags": {
-                "tenantname": tag_tenantname, "tenantid": tag_tenantid, "restype": tag_restype
-            },
-            "time": time,
-            "fields": {
-                "value": value
-            }
-        }
-    ]
-    influx.write_points(json_body)
+def os_resource_usage_trend(db, influx, report_type, res_type, res_action, res_table, time_start, time_end):
+    points = []
+    points += os_platform_usage_trend(db, influx, report_type, res_type, res_action, res_table, time_start, time_end)
+    points += os_tenant_usage_trend(db, influx, report_type, res_type, res_action, res_table, time_start, time_end)
+    return points
+
+
+### cancel.
+
+### !! Deprecated. tenant usage can be get through 'os_tenant_usage_trend'
+def os_tenant_usage(db, influx, res_table, time_end):
+    measurement = "os_tenant_usage_v2"
+    # sql_temp = build_sql_tenant_usage("nova.quota_usages")
+    sql_statement = build_sql_tenant_usage(res_table)
+    cursor = db.cursor()
+    cursor.execute(sql_statement)
+
+    # multiple row result.
+    # row[0] Project_name, row[1] Project_id, row[2] resource_name
+    points = []
+    for row in cursor:
+        tags = {
+                  "tenantname": row[0],
+                  "tenantid": row[1],
+                  "restype": row[2]
+               }
+        value = float(row[3])
+        points.append(influx_point(measurement, tags, time_end, value))
+    return points
 
 
 def report_task(db, dest, report_type, time_start, time_end):
-    sql_time_between = "BETWEEN '" + time_start + "' AND '" + time_end + "'"
+
+    points = []
+    # Instance
+    points += os_resource_usage_trend(db, dest, report_type, "instance", "created", "nova.instances", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "instance", "deleted", "nova.instances", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "instance", "exist", "nova.instances", time_start, time_end)
+  
+    # vCPUs
+    points += os_resource_usage_trend(db, dest, report_type, "vcpus", "created", "nova.instances", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "vcpus", "deleted", "nova.instances", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "vcpus", "exist", "nova.instances", time_start, time_end)
+
+    # Memory
+    points += os_resource_usage_trend(db, dest, report_type, "memory", "created", "nova.instances", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "memory", "deleted", "nova.instances", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "memory", "exist", "nova.instances", time_start, time_end)
+
+    # Root
+    points += os_resource_usage_trend(db, dest, report_type, "root", "created", "nova.instances", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "root", "deleted", "nova.instances", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "root", "exist", "nova.instances", time_start, time_end)
+
+    # volume
+    points += os_resource_usage_trend(db, dest, report_type, "volume", "created", "cinder.volumes", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "volume", "deleted", "cinder.volumes", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "volume", "exist", "cinder.volumes", time_start, time_end)
     
-    sql_instance_created = "select count(*) from nova.instances where created_at " + sql_time_between
-    sql_instance_deleted = "select count(*) from nova.instances where deleted_at " + sql_time_between
-    sql_instance_exist = ("select count(*) from nova.instances where created_at < '" + time_end 
-                              + "' and ( deleted_at is NULL or deleted_at > '" + time_end + "')" ) 
+    # vol_size (volume size)
+    points += os_resource_usage_trend(db, dest, report_type, "vol_size", "created", "cinder.volumes", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "vol_size", "deleted", "cinder.volumes", time_start, time_end)
+    points += os_resource_usage_trend(db, dest, report_type, "vol_size", "exist", "cinder.volumes", time_start, time_end)
+
+    ## Deprecated.
+    points += os_tenant_usage(db, dest, "nova.quota_usages", time_end)
     
-    os_resource_usage(dest, "instance", "created", report_type, time_end, get_sql_value(db, sql_instance_created))
-    os_resource_usage(dest, "instance", "deleted", report_type, time_end, get_sql_value(db, sql_instance_deleted))
-    os_resource_usage(dest, "instance", "exist", report_type, time_end, get_sql_value(db, sql_instance_exist))
-    
-    # vCPU, Memory, Root_GB
-    sql_vcpus_created = "select COALESCE(sum(vcpus), 0) from nova.instances where created_at " + sql_time_between
-    sql_vcpus_deleted = "select COALESCE(sum(vcpus),0 ) from nova.instances where deleted_at " + sql_time_between
-    sql_vcpus_exist = ("select COALESCE(sum(vcpus),0 ) from nova.instances where created_at < '" + time_end 
-                              + "' and ( deleted_at is NULL or deleted_at > '" + time_end + "')" ) 
-
-    os_resource_usage(dest, "vcpus", "created", report_type, time_end, get_sql_value(db, sql_vcpus_created))
-    os_resource_usage(dest, "vcpus", "deleted", report_type, time_end, get_sql_value(db, sql_vcpus_deleted))
-    os_resource_usage(dest, "vcpus", "exist", report_type, time_end, get_sql_value(db, sql_vcpus_exist))
-
-    sql_memory_created = "select COALESCE(sum(memory_mb), 0) from nova.instances where created_at " + sql_time_between
-    sql_memory_deleted = "select COALESCE(sum(memory_mb), 0) from nova.instances where deleted_at " + sql_time_between
-    sql_memory_exist = ("select COALESCE(sum(memory_mb), 0) from nova.instances where created_at < '" + time_end 
-                              + "' and ( deleted_at is NULL or deleted_at > '" + time_end + "')" ) 
-
-    os_resource_usage(dest, "memory", "created", report_type, time_end, get_sql_value(db, sql_memory_created))
-    os_resource_usage(dest, "memory", "deleted", report_type, time_end, get_sql_value(db, sql_memory_deleted))
-    os_resource_usage(dest, "memory", "exist", report_type, time_end, get_sql_value(db, sql_memory_exist))
-
-    sql_root_created = "select COALESCE(sum(root_gb), 0) from nova.instances where created_at " + sql_time_between
-    sql_root_deleted = "select COALESCE(sum(root_gb), 0) from nova.instances where deleted_at " + sql_time_between
-    sql_root_exist = ("select COALESCE(sum(root_gb), 0) from nova.instances where created_at < '" + time_end 
-                              + "' and ( deleted_at is NULL or deleted_at > '" + time_end + "')" ) 
-
-    os_resource_usage(dest, "root", "created", report_type, time_end, get_sql_value(db, sql_root_created))
-    os_resource_usage(dest, "root", "deleted", report_type, time_end, get_sql_value(db, sql_root_deleted))
-    os_resource_usage(dest, "root", "exist", report_type, time_end, get_sql_value(db, sql_root_exist))
-
-
-    # Cinder volumes.
-    sql_volume_created = "select count(*) from cinder.volumes where created_at " + sql_time_between
-    sql_volume_deleted = "select count(*) from cinder.volumes where deleted_at " + sql_time_between
-    sql_volume_exist = ("select count(*) from cinder.volumes where created_at < '" + time_end 
-                            + "' and ( deleted_at is NULL or deleted_at > '" + time_end + "')" ) 
-    
-    os_resource_usage(dest, "volume", "created", report_type, time_end, get_sql_value(db, sql_volume_created))
-    os_resource_usage(dest, "volume", "deleted", report_type, time_end, get_sql_value(db, sql_volume_deleted))
-    os_resource_usage(dest, "volume", "exist", report_type, time_end, get_sql_value(db, sql_volume_exist))
-
-    # volume size.
-    sql_volsize_created = "select COALESCE(sum(size), 0) from cinder.volumes where created_at " + sql_time_between
-    sql_volsize_deleted = "select COALESCE(sum(size), 0) from cinder.volumes where deleted_at " + sql_time_between
-    sql_volsize_exist = ("select COALESCE(sum(size), 0) from cinder.volumes where created_at < '" + time_end 
-                              + "' and ( deleted_at is NULL or deleted_at > '" + time_end + "')" ) 
-    
-    os_resource_usage(dest, "volsize", "created", report_type, time_end, get_sql_value(db, sql_volsize_created))
-    os_resource_usage(dest, "volsize", "deleted", report_type, time_end, get_sql_value(db, sql_volsize_deleted))
-    os_resource_usage(dest, "volsize", "exist", report_type, time_end, get_sql_value(db, sql_volsize_exist))
-   
-
-    # Tenant Usage
-    sql_tenant_usage = "select P.name, Q.project_id, Q.resource, COALESCE(sum(Q.in_use), 0) as res_sum \
-                        from nova.quota_usages as Q \
-                        inner join keystone.project as P \
-                        on Q.project_id = P.id \
-                        group by Q.project_id, Q.resource"
-
-    cursor = db.cursor()
-    cursor.execute(sql_tenant_usage)
-    for row in cursor:
-        os_tenant_usage(dest, row[0], row[1], row[2], time_end, row[3])
+    dest.write_points(points)
 
 
 def do_report(day_dt, report_type):
@@ -218,12 +268,9 @@ def do_report(day_dt, report_type):
         time_start, time_end = month_to_utc_time(day_dt)
     else:
         pass
-    
  
     report_task(db, influx, report_type, time_start, time_end)
-
     db.close()
-
 
 
 ## Main Process.
