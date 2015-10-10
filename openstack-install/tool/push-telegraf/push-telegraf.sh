@@ -2,6 +2,8 @@
 
 IPFILE=$1
 
+SSH_OPTIONS="-o StrictHostKeyChecking=no -o ConnectTimeout=10s"
+
 push_telegraf_to_init() {
   ssh $SSH_OPTIONS $1 "
     stop telegraf
@@ -46,7 +48,6 @@ push_telegraf_to_systemd() {
 
 > /tmp/push.log
 
-SSH_OPTIONS="-o StrictHostKeyChecking=no -o ConnectTimeout=10s"
 
 while read -u10 IP; do
   ssh $SSH_OPTIONS $IP "hostname"
