@@ -1,0 +1,7 @@
+LoadPlugin protocols
+
+<Plugin protocols>
+  Value "/./"
+  IgnoreSelected false
+</Plugin>
+

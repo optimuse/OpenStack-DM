@@ -1,0 +1,8 @@
+LoadPlugin memcached
+
+<Plugin "memcached">
+  <Instance "localhost">
+    Host "10.5.255.5"
+    Port 11211
+  </Instance>
+</Plugin>

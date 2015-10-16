@@ -44,7 +44,7 @@ user_id=$(get_id keystone user-create --name "$user_name" --pass "$user_pass")
 keystone user-role-add --user $user_id --tenant_id $tenant_id --role $role_default_id
 
 cat <<EOF 
-[:--)] Successflly created User $user_name.
+[:-)] Successflly created User $user_name.
 User ID: $user_id
 User Name: $user_name
 Tenant Name: $tenant_name

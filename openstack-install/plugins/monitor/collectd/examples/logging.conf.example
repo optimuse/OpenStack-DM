@@ -1,0 +1,27 @@
+##############################################################################
+# Logging                                                                    #
+#----------------------------------------------------------------------------#
+# Plugins which provide logging functions should be loaded first, so log     #
+# messages generated when loading or configuring other plugins can be        #
+# accessed.                                                                  #
+##############################################################################
+
+#LoadPlugin syslog
+LoadPlugin logfile
+#LoadPlugin log_logstash
+
+<Plugin logfile>
+  LogLevel info
+  File "/var/log/collectd.log"
+  Timestamp true
+  PrintSeverity false
+</Plugin>
+
+#<Plugin log_logstash>
+#  LogLevel info
+#  File "/var/log/collectd.json.log"
+#</Plugin>
+
+#<Plugin syslog>
+#  LogLevel info
+#</Plugin>

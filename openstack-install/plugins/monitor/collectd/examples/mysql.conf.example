@@ -1,0 +1,18 @@
+LoadPlugin mysql
+
+<Plugin mysql>
+  <Database nova>
+    Host "localhost"
+    Socket "/var/lib/mysql/mysql.sock"
+    ConnectTimeout 10
+
+    User "root"
+    Password "passw0rd"
+
+    InnodbStats true
+
+    MasterStats false
+    SlaveStats false
+    SlaveNotifications false
+  </Database>
+</Plugin>

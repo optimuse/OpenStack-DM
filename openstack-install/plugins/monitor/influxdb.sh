@@ -14,7 +14,6 @@ yum localinstall -y telegraf-*.rpm
 yum install -y collectd
 
 
-
 # service init file for systemd
 # /opt/influxdb/versions/0.9.4.1/scripts/influxdb.service
 # cp /opt/influxdb/versions/0.9.4.1/scripts/influxdb.service /usr/lib/systemd/system/
@@ -50,7 +49,7 @@ $crud_influxdb http enabled true
 $crud_influxdb http auth-enabled true
 
 # listener for graphite
-$crud_influxdb graphite enabled true
+$crud_influxdb graphite enabled false
 $crud_influxdb graphite bind-address \":2003\"
 
 # listener for collectd

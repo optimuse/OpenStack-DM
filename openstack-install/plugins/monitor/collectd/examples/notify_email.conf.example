@@ -1,0 +1,13 @@
+LoadPlugin notify_email
+
+<Plugin notify_email>
+  #SMTPServer "localhost"
+  #SMTPPort 25
+  #SMTPUser "my-username"
+  #SMTPPassword "my-password"
+
+  # <WARNING/FAILURE/OK> on <hostname>. beware! do not use not more than two %s in this string!!!
+  Subject "Collectd notify. !! %s on %s!!!!!"
+
+  Recipient "root@iaas-monitor.localdomain"
+</Plugin>

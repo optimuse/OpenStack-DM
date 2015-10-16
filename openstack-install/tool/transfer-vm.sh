@@ -5,8 +5,8 @@
 source_ip=$1
 dest_ip=$2
 
-source_inst_uuid=$(nova list --all-tenants --ip $source_ip | grep $source_ip | awk '{print $2}') 
-dest_inst_uuid=$(nova list --all-tenants --ip $dest_ip | grep $dest_ip | awk '{print $2}') 
+source_inst_uuid=$(nova list --all-tenants --ip "^${source_ip}$" | grep $source_ip | awk '{print $2}') 
+dest_inst_uuid=$(nova list --all-tenants --ip "^${dest_ip}$" | grep $dest_ip | awk '{print $2}') 
 
 [[ $source_inst_uuid == "" ]] && echo "Error! Can't find instance ${source_ip}, exit" && exit
 [[ $dest_inst_uuid == "" ]] && echo "Error! Can't find instance ${dest_ip}, exit" && exit

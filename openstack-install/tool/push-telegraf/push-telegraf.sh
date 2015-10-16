@@ -8,20 +8,23 @@ push_telegraf_to_init() {
   ssh $SSH_OPTIONS $1 "
     stop telegraf
     killall telegraf
+    rm -rf /etc/telegraf.conf
+    rm -rf /etc/init/telegraf.conf
+    rm -rf /usr/local/bin/telegraf
   "
 
-  scp telegraf.conf $1:/etc/telegraf.conf
-  scp init-telegraf.conf $1:/etc/init/telegraf.conf
-  scp telegraf.bin $1:/usr/local/bin/telegraf
+  #scp telegraf.conf $1:/etc/telegraf.conf
+  #scp init-telegraf.conf $1:/etc/init/telegraf.conf
+  #scp telegraf.bin $1:/usr/local/bin/telegraf
 
-  ssh $SSH_OPTIONS $1 "
-    sed -i '/hostname =/c\    hostname = \"$1\"' /etc/telegraf.conf
-    chmod +x /usr/local/bin/telegraf
-    killall telegraf
-    stop telegraf
-    start telegraf
-    status telegraf
-  "
+  #ssh $SSH_OPTIONS $1 "
+  #  sed -i '/hostname =/c\    hostname = \"$1\"' /etc/telegraf.conf
+  #  chmod +x /usr/local/bin/telegraf
+  #  killall telegraf
+  #  stop telegraf
+  #  start telegraf
+  #  status telegraf
+  #"
 }
 
 
@@ -29,21 +32,24 @@ push_telegraf_to_systemd() {
   ssh $SSH_OPTIONS $1 "
     systemctl stop telegraf
     killall telegraf
+    rm -rf /etc/telegraf.conf
+    rm -rf /lib/systemd/system/telegraf.service
+    rm -rf /usr/local/bin/telegraf
   "
-  scp telegraf.conf $1:/etc/telegraf.conf
-  scp systemd-teleconf.service $1:/lib/systemd/system/telegraf.service
-  scp telegraf.bin $1:/usr/local/bin/telegraf
+  #scp telegraf.conf $1:/etc/telegraf.conf
+  #scp systemd-teleconf.service $1:/lib/systemd/system/telegraf.service
+  #scp telegraf.bin $1:/usr/local/bin/telegraf
 
-  ssh $1 "
-    sed -i '/hostname =/c\    hostname = \"$1\"' /etc/telegraf.conf
-    systemctl daemon-reload
-    chmod +x /usr/local/bin/telegraf
-    killall telegraf
-    systemctl stop telegraf
-    systemctl enable telegraf
-    systemctl start telegraf
-    systemctl status telegraf
- "
+  #ssh $1 "
+  #  sed -i '/hostname =/c\    hostname = \"$1\"' /etc/telegraf.conf
+  #  systemctl daemon-reload
+  #  chmod +x /usr/local/bin/telegraf
+  #  killall telegraf
+  #  systemctl stop telegraf
+  #  systemctl enable telegraf
+  #  systemctl start telegraf
+  #  systemctl status telegraf
+  #"
 }
 
 > /tmp/push.log

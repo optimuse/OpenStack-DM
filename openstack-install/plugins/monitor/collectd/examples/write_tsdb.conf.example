@@ -1,0 +1,12 @@
+# LoadPlugin write_tsdb
+
+<Plugin write_tsdb>
+  <Node "monitor">
+    Host "localhost"
+    Port "4242"
+    HostTags "status=production"
+    StoreRates true
+    AlwaysAppendDS false
+  </Node>
+</Plugin>
+

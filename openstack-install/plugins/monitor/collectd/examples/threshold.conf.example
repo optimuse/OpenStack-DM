@@ -1,0 +1,19 @@
+LoadPlugin "threshold"
+
+<Plugin threshold>
+  <Plugin "interface">
+    Instance "eth0"
+    <Type "if_octets">
+      FailureMax 10000000
+      DataSource "rx"
+    </Type>
+  </Plugin>
+
+  <Plugin "cpu">
+    <Type "cpu">
+      Instance "idle"
+      FailureMin 20
+    </Type>
+  </Plugin>
+
+</Plugin>
