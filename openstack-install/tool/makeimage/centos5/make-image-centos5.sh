@@ -1,8 +1,12 @@
+#!/bin/bash
+
 cd /etc/yum.repos.d/
 yum install -y wget
+
 wget http://mirrors.163.com/.help/CentOS5-Base-163.repo
 mv CentOS-Base.repo CentOS-Base.repo.origin
 mv CentOS5-Base-163.repo CentOS-Base.repo
+
 yum clean all
 
 yum install -y epel-release
@@ -80,4 +84,27 @@ NETWORKING=yes
 NOZEROCONF=yes
 EOF
 
-## Clean up MAC addresses.
+
+# Autoload acpiphp module, requisite for 'cinder attach volume'
+# and make sure it is executable.
+
+cat <<EOF > /etc/sysconfig/modules/acpiphp.modules
+#!/bin/sh
+
+modprobe acpiphp >/dev/null 2>&1
+
+exit 0
+EOF
+chmod +x /etc/sysconfig/modules/acpiphp.modules
+
+
+## Let CentOS 5 dhcp client support DHCP option 121 (classless-routes)
+
+BASE=$(dirname $0)
+BASE=$(cd $BASE; pwd)
+
+cp $BASE/dhclient.conf /etc/ 
+cp $BASE/dhclient-exit-hooks /etc/
+
+###
+
