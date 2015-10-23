@@ -1,10 +1,12 @@
 #!/bin/bash
 
-name="$1"
+#volume_uuid="$1"
+#volume="volumes/volume-${volume_uuid}"
 
-volume="volumes/volume-$name"
+volume=$1
+pool=${volume%%/*}
 
 rbd info $volume
 subfix=`rbd info $volume | grep block_name_prefix | awk -F. '{print $2}'`
 
-rados -p volumes listwatchers rbd_header.$subfix
+rados -p ${pool} listwatchers rbd_header.$subfix

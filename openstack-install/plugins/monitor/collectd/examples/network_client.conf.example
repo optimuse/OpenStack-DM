@@ -1,0 +1,6 @@
+LoadPlugin network
+<Plugin network>
+        <Server "10.5.255.5" "25826">
+                SecurityLevel None
+        </Server>
+</Plugin>

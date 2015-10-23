@@ -12,6 +12,7 @@ do
 	echo vms/${uuid}_disk@${uuid}_${time_str}
 #	rbd snap create vms/${uuid}_disk@${uuid}_${time_str}
 #	rbd snap protect vms/${uuid}_disk@${uuid}_${time_str}
+#	rbd snap unprotect vms/${uuid}_disk@${uuid}_${time_end}
 #	rbd snap rm vms/${uuid}_disk@${uuid}_${time_end}
 done
 
@@ -31,8 +32,11 @@ fi
 
 uuid=$(nova list --all-tenants --ip "^$ip$" | grep $ip | awk '{print $2}')
 echo vms/${uuid}_disk
+#rbd snap unprotect vms/${uuid}_disk
 #rbd snap rm vms/${uuid}_disk
-#rbd snap clone vms/${uuid}_disk@${uuid}_${recovery_date} vms/${uuid}_disk
+#rbd snap mv vms/${uuid}_disk@${uuid}_${recovery_date} vms/${uuid}_disk@${uuid}_recovery_${recovery_date}
+#rbd snap clone vms/${uuid}_disk@${uuid}_recovery_${recovery_date} vms/${uuid}_disk
+echo 
 
 else 
 echo "Please select mode backup/recovery"
